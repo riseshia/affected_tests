@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require "json"
+
+require "octokit"
+
+if ARGV.size != 3
+  puts "Help: bin/generate-diff-files <repository> <base_sha> <target_sha>"
+  exit 1
+end
+
+repository = ARGV.shift
+base_sha = ARGV.shift
+target_sha = ARGV.shift
+
+client = Octokit::Client.new(access_token: ENV["GITHUB_TOKEN"])
+
+targets = client.compare(repository, base_sha, target_sha).files.map do |info|
+  {
+    filename: info.filename,
+    status: info.status
+  }
+end
+
+puts JSON.dump(targets)

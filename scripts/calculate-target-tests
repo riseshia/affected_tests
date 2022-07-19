@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require "optparse"
+
+require "affected_tests/differ"
+
+# bin/calculate-target-test --diff-file=<path> --map-file=<path> --test-dir=<path> --delimiter=,
+options = { diff_file_path: nil, map_file_path: nil, delimiter: " " }
+
+opt = OptionParser.new
+opt.on("--diff-file=<path>") { |v| options[:diff_file_path] = v }
+opt.on("--map-file=<path>") { |v| options[:map_file_path] = v }
+opt.on("--test-dir=<path>") { |v| options[:test_dir_path] = v }
+opt.on("--output-delimiter=<val>", "Specify delimiter when output target tests. default: whitespace.") {|v| options[:delimiter] = v }
+opt.parse!(ARGV)
+
+if options.values.compact.size != 4
+  puts "--diff-file, --map-file and --test-dir are required"
+  exit 1
+end
+
+target_tests = AffectedTests::Differ.run(
+  diff_file_path: options[:diff_file_path],
+  map_file_path: options[:map_file_path],
+  test_dir_path: options[:test_dir_path]
+)
+
+# Test all if calculated result is empty
+target_tests = Dir["spec/**/*_spec.rb"] if target_tests.empty?
+
+# Split tests files for parallel tests.
+node_number = ENV.fetch("NODE_NUMBER", "1").to_i
+node_index = ENV.fetch("NODE_INDEX", "0").to_i
+
+partial_list = target_tests.sort.each_slice(node_number).map { |slice| slice[node_index] }.compact
+
+puts partial_list.join(options[:delimiter])
