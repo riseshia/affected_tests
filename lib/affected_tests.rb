@@ -3,7 +3,7 @@
 require "set"
 require "json"
 
-require "calleree"
+require "rotoscope"
 
 require_relative "affected_tests/version"
 
@@ -14,50 +14,50 @@ module AffectedTests
     @project_path = project_path
     @test_dir_path = test_dir_path
     @output_path = output_path
-  end
+    @rotoscope = Rotoscope.new do |call|
+      next if self == call.receiver
 
-  def start
-    Calleree.start
-  end
-
-  def import_from_calleree(target_test_path, result)
-    caller_in_project = result.select do |(caller_info, _callee_info, _count)|
-      caller_path = caller_info.first
-      target_path?(caller_path)
-    end.map do |(caller_info, _callee_info, _count)|
-      format_path(caller_info.first)
-    end
-
-    called_in_project = result.select do |(_caller_info, callee_info, _count)|
-      callee_path = callee_info.first
-      target_path?(callee_path)
-    end.map do |(_caller_info, callee_info, _count)|
-      format_path(callee_info.first)
-    end
-
-    all_related_paths = (called_in_project + caller_in_project).uniq
-
-    target_test_file_path = format_path(target_test_path)
-
-    all_related_paths.each do |path|
-      next if path.start_with?(@test_dir_path)
-
-      if path != target_test_file_path
-        add(target_test_file_path, path)
+      if call.caller_path && target_path?(call.caller_path)
+        buffer << call.caller_path
       end
     end
   end
 
-  def emit(target_test_path)
-    res = Calleree.result(clear: true)
-    import_from_calleree(target_test_path, res)
+  def start_trace
+    @rotoscope.start_trace
+  end
+
+  def stop_trace
+    @rotoscope.stop_trace
+  end
+
+  def import_from_rotoscope(target_test_path, result)
+    all_related_paths = result.uniq.map do |caller_path|
+      format_path(caller_path)
+    end
+
+    formatted_target_test_path = format_path(target_test_path)
+
+    all_related_paths.each do |path|
+      next if path.start_with?(@test_dir_path)
+
+      if path != formatted_target_test_path
+        add(formatted_target_test_path, path)
+      end
+    end
+  end
+
+  def checkpoint(target_test_path)
+    diff = buffer
+    import_from_rotoscope(target_test_path, diff)
+    buffer.clear
   end
 
   def dump
     data = { revision: revision, map: cache.transform_values(&:to_a) }
     File.write(@output_path, JSON.dump(data))
   ensure
-    Calleree.stop
+    @rotoscope.stop_trace if @rotoscope.tracing?
   end
 
   def format_path(path)
@@ -82,8 +82,12 @@ module AffectedTests
     end
   end
 
+  def buffer
+    Thread.current[:buffer] ||= []
+  end
+
   def cache
-    @cache ||= {}
+    Thread.current[:cache] ||= {}
   end
 
   def bundler_path

@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
 RSpec.configure do |config|
-  config.before(:suite) do
-    AffectedTests.start
+  config.prepend_before(:each) do
+    AffectedTests.start_trace
   end
 
-  config.after(:each) do
+  config.append_after(:each) do
+    AffectedTests.stop_trace
     target_spec = self.class.declaration_locations.last[0]
-    AffectedTests.emit(target_spec)
+    AffectedTests.checkpoint(target_spec)
   end
 
   config.after(:suite) do
