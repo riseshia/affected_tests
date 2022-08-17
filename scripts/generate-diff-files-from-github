@@ -15,11 +15,23 @@ target_sha = ARGV.shift
 
 client = Octokit::Client.new(access_token: ENV["GITHUB_TOKEN"])
 
-targets = client.compare(repository, base_sha, target_sha).files.map do |info|
-  {
-    filename: info.filename,
-    status: info.status
-  }
+targets = client.compare(repository, base_sha, target_sha).files.each_with_object([]) do |info, arr|
+  # https://docs.github.com/en/rest/commits/commits#get-a-commit
+  case info.status
+  when "modified", "added", "removed"
+    arr << { filename: info.filename, status: info.status }
+  when "renamed"
+    arr << { filename: info.filename, status: "added" }
+    arr << { filename: info.previous_filename, status: "removed" }
+  when "copied"
+    arr << { filename: info.filename, status: "added" }
+  when "changed"
+    arr << { filename: info.filename, status: "modified" }
+  when "unchanged"
+    # do nothing
+  else
+    raise "Unknown status: #{info.status}"
+  end
 end
 
 puts JSON.dump(targets)
