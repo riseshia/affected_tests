@@ -29,13 +29,14 @@ require "affected_tests/rspec"
 AffectedTests.setup(
   project_path: File.expand_path("../../", __FILE__),
   test_dir_path: "spec/",
-  output_path: "log/affected-tests-map.json"
+  output_path: "log/affected-tests-map.json",
+  revision: "1cf22fdb86e2b2d6107" # or git rev-parse HEAD > REVISION
 )
 ```
 
-this will write associated files per test on `log/affected-tests-map.json`.
+this will write associated files per test on `log/affected-tests-map.json`:
 
-```
+```json
 {
   "revision": "1cf22fdb86e2b2d6107",
   "map": {

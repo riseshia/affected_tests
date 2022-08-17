@@ -10,10 +10,11 @@ require_relative "affected_tests/version"
 module AffectedTests
   module_function
 
-  def setup(project_path:, test_dir_path:, output_path:)
+  def setup(project_path:, test_dir_path:, output_path:, revision: nil)
     @project_path = project_path
     @test_dir_path = test_dir_path
     @output_path = output_path
+    @revision = revision
     @rotoscope = Rotoscope.new do |call|
       next if self == call.receiver
 
@@ -74,6 +75,8 @@ module AffectedTests
   end
 
   def revision
+    return @revision if @revision
+
     revision_path = File.expand_path("../../REVISION", __FILE__)
     if File.exist?(revision_path)
       File.read(revision_path).strip
