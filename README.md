@@ -33,6 +33,22 @@ AffectedTests.setup(
 )
 ```
 
+this will write associated files per test on `log/affected-tests-map.json`.
+
+```
+{
+  "revision": "1cf22fdb86e2b2d6107",
+  "map": {
+    "app/controllers/comments_controller.rb": [
+      "spec/requests/comments_spec.rb"
+    ],
+    "app/views/comments/index.html.erb": [
+      "spec/requests/comments_spec.rb",
+    "spec/views/comments/index.html.erb_spec.rb"
+    ],
+  }
+```
+
 ### Get Diff
 
 #### Schema
