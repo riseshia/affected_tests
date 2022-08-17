@@ -34,7 +34,7 @@ AffectedTests.setup(
 )
 ```
 
-this will write associated files per test on `log/affected-tests-map.json`:
+this will write associated test files per file on `log/affected-tests-map.json`:
 
 ```json
 {
@@ -45,9 +45,10 @@ this will write associated files per test on `log/affected-tests-map.json`:
     ],
     "app/views/comments/index.html.erb": [
       "spec/requests/comments_spec.rb",
-    "spec/views/comments/index.html.erb_spec.rb"
-    ],
+      "spec/views/comments/index.html.erb_spec.rb"
+    ]
   }
+}
 ```
 
 ### Get Diff
@@ -92,6 +93,17 @@ pp target_tests
 ```
 
 See also: `scripts/calculate-target-tests`
+
+#### Merge results from parallel test
+
+```
+require "affected_tests/map_merger"
+
+AffectedTests::MapMerger.run(
+  map_file_paths: %w[node1-result.json node2-result.json node3-result.json],
+  output_path: "merged-result.json"
+)
+```
 
 ## Development
 
