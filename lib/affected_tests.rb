@@ -14,7 +14,7 @@ module AffectedTests
     @project_path = project_path
     @test_dir_path = test_dir_path
     @output_path = output_path
-    @revision = revision
+    @revision = revision || build_revision
     @rotoscope = Rotoscope.new do |call|
       next if self == call.receiver
 
@@ -55,7 +55,7 @@ module AffectedTests
   end
 
   def dump
-    data = { revision: revision, map: cache.transform_values(&:to_a) }
+    data = { revision: @revision, map: cache.transform_values(&:to_a) }
     File.write(@output_path, JSON.dump(data))
   ensure
     @rotoscope.stop_trace if @rotoscope.tracing?
@@ -74,12 +74,14 @@ module AffectedTests
     cache[callee].add(caller)
   end
 
-  def revision
-    return @revision if @revision
-
-    revision_path = File.expand_path("../../REVISION", __FILE__)
-    if File.exist?(revision_path)
-      File.read(revision_path).strip
+  def build_revision
+    if defined? Rails
+      path = Rails.root.join("REVISION")
+      if path.exist?
+        path.read.chomp
+      else
+        "UNKNOWN"
+      end
     else
       "UNKNOWN"
     end
