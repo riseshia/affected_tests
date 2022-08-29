@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    affected_tests (0.1.0)
+    affected_tests (0.2.0)
       rotoscope
 
 GEM
@@ -11,7 +11,7 @@ GEM
     rotoscope (0.3.0)
 
 PLATFORMS
-  arm64-darwin-21
+  ruby
 
 DEPENDENCIES
   affected_tests!
