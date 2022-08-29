@@ -14,7 +14,7 @@ module AffectedTests
     @project_path = project_path
     @test_dir_path = test_dir_path
     @output_path = output_path
-    @revision = revision || build_revision
+    @revision = revision
     @rotoscope = Rotoscope.new do |call|
       next if self == call.receiver
 
@@ -55,7 +55,7 @@ module AffectedTests
   end
 
   def dump
-    data = { revision: @revision, map: cache.transform_values(&:to_a) }
+    data = { revision: @revision || build_revision, map: cache.transform_values(&:to_a) }
     File.write(@output_path, JSON.dump(data))
   ensure
     @rotoscope.stop_trace if @rotoscope.tracing?
