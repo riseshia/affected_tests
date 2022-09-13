@@ -27,6 +27,7 @@ require "affected_tests"
 require "affected_tests/rspec"
 
 AffectedTests.setup(
+  engine: :rotoscope,
   project_path: File.expand_path("../../", __FILE__),
   test_dir_path: "spec/",
   output_path: "log/affected-tests-map.json",
