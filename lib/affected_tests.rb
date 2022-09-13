@@ -3,75 +3,80 @@
 require "set"
 require "json"
 
-require "rotoscope"
-
 require_relative "affected_tests/version"
 
 module AffectedTests
+  class Configuration
+    attr_reader :project_path, :bundler_path, :test_dir_path, :output_path, :revision
+
+    def initialize(project_path:, test_dir_path:, output_path:, revision:)
+      @project_path = project_path
+      @test_dir_path = test_dir_path
+      @bundler_path = Bundler.bundle_path.to_s
+      @output_path = output_path
+      @revision = revision
+    end
+
+    def format_path(path)
+      if path&.start_with?(@project_path)
+        path.sub(@project_path + "/", "")
+      else
+        path
+      end
+    end
+
+    def target_path?(path)
+      return false if path.nil?
+
+      path.start_with?(@project_path) && !path.start_with?(@bundler_path)
+    end
+  end
+
   module_function
 
-  def setup(project_path:, test_dir_path:, output_path:, revision: nil)
-    @project_path = project_path
-    @test_dir_path = test_dir_path
-    @output_path = output_path
-    @revision = revision
-    @rotoscope = Rotoscope.new do |call|
-      next if self == call.receiver
+  def setup(engine: :rotoscope, project_path:, test_dir_path:, output_path:, revision: nil)
+    @config = Configuration.new(
+      project_path: project_path,
+      output_path: output_path,
+      revision: revision,
+      test_dir_path: test_dir_path
+    )
 
-      if call.caller_path && target_path?(call.caller_path)
-        buffer << call.caller_path
-      end
+    @engine = select_engine(engine).new(@config)
+  end
+
+  def select_engine(engine)
+    case engine
+    when :rotoscope
+      require "rotoscope"
+      require "affected_tests/engine/rotoscope"
+      AffectedTests::Engine::Rotoscope
+    when :coverage
+      require "coverage"
+      require "affected_tests/engine/coverage"
+      AffectedTests::Engine::Coverage
+    else
+      raise "Unknown engine: #{engine}"
     end
   end
 
   def start_trace
-    @rotoscope.start_trace
+    @engine.start_trace
   end
 
   def stop_trace
-    @rotoscope.stop_trace
-  end
-
-  def import_from_rotoscope(target_test_path, result)
-    all_related_paths = result.uniq.map do |caller_path|
-      format_path(caller_path)
-    end
-
-    formatted_target_test_path = format_path(target_test_path)
-
-    all_related_paths.each do |path|
-      next if path.start_with?(@test_dir_path)
-
-      if path != formatted_target_test_path
-        add(formatted_target_test_path, path)
-      end
-    end
+    @engine.stop_trace
   end
 
   def checkpoint(target_test_path)
-    diff = buffer
-    import_from_rotoscope(target_test_path, diff)
-    buffer.clear
+    @engine.checkpoint(target_test_path)
   end
 
   def dump
-    data = { revision: @revision || build_revision, map: cache.transform_values(&:to_a) }
-    File.write(@output_path, JSON.dump(data))
+    data = { revision: @config.revision || build_revision, map: @engine.dump }
+    File.write(@config.output_path, JSON.dump(data))
   ensure
-    @rotoscope.stop_trace if @rotoscope.tracing?
-  end
-
-  def format_path(path)
-    if path&.start_with?(@project_path)
-      path.sub(@project_path + "/", "")
-    else
-      path
-    end
-  end
-
-  def add(caller, callee)
-    cache[callee] ||= Set.new
-    cache[callee].add(caller)
+    @engine.stop_trace if @engine.tracing?
   end
 
   def build_revision
@@ -85,23 +90,5 @@ module AffectedTests
     else
       "UNKNOWN"
     end
-  end
-
-  def buffer
-    Thread.current[:buffer] ||= []
-  end
-
-  def cache
-    Thread.current[:cache] ||= {}
-  end
-
-  def bundler_path
-    @bundler_path ||= Bundler.bundle_path.to_s
-  end
-
-  def target_path?(path)
-    return false if path.nil?
-
-    path.start_with?(@project_path) && !path.start_with?(bundler_path)
   end
 end
