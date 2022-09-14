@@ -13,14 +13,16 @@ module AffectedTests
             buffer << call.caller_path
           end
         end
-      end
-
-      def start_trace
         @rotoscope.start_trace
       end
 
+      def start_trace
+        # Clear buffer
+        buffer.clear
+      end
+
       def stop_trace
-        @rotoscope.stop_trace
+        # do nothing
       end
 
       def tracing?
@@ -63,6 +65,7 @@ module AffectedTests
       end
 
       def dump
+        @rotoscope.stop_trace
         cache.transform_values(&:to_a)
       end
     end
