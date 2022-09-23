@@ -1,9 +1,5 @@
 # AffectedTests
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/affected_tests`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
-
 ## Installation
 
 Install the gem and add to the application's Gemfile by executing:
@@ -13,6 +9,16 @@ Install the gem and add to the application's Gemfile by executing:
 If bundler is not being used to manage dependencies, install the gem by executing:
 
     $ gem install affected_tests
+
+### About engine
+
+affected_tests support 3 engines to find out test, source relation:
+
+- rotoscope (default)
+- coverage
+- calleree
+
+each engine require its library, so you need to add proper gem according to your selection(except coverage which is stdlib).
 
 ## Usage
 

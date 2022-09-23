@@ -51,6 +51,10 @@ module AffectedTests
       require "rotoscope"
       require "affected_tests/engine/rotoscope"
       AffectedTests::Engine::Rotoscope
+    when :calleree
+      require "calleree"
+      require "affected_tests/engine/calleree"
+      AffectedTests::Engine::Calleree
     when :coverage
       require "coverage"
       require "affected_tests/engine/coverage"
