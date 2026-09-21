@@ -12,10 +12,9 @@ If bundler is not being used to manage dependencies, install the gem by executin
 
 ### About engine
 
-affected_tests support 3 engines to find out test, source relation:
+affected_tests support 2 engines to find out test, source relation:
 
-- rotoscope (default)
-- coverage
+- coverage (default)
 - calleree
 
 each engine require its library, so you need to add proper gem according to your selection(except coverage which is stdlib).
@@ -33,7 +32,7 @@ require "affected_tests"
 require "affected_tests/rspec"
 
 AffectedTests.setup(
-  engine: :rotoscope,
+  engine: :coverage,
   project_path: File.expand_path("../../", __FILE__),
   test_dir_path: "spec/",
   output_path: "log/affected-tests-map.json",

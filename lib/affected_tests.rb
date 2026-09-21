@@ -34,7 +34,7 @@ module AffectedTests
 
   module_function
 
-  def setup(engine: :rotoscope, project_path:, test_dir_path:, output_path:, revision: nil)
+  def setup(engine: :coverage, project_path:, test_dir_path:, output_path:, revision: nil)
     @config = Configuration.new(
       project_path: project_path,
       output_path: output_path,
@@ -47,10 +47,6 @@ module AffectedTests
 
   def select_engine(engine)
     case engine
-    when :rotoscope
-      require "rotoscope"
-      require "affected_tests/engine/rotoscope"
-      AffectedTests::Engine::Rotoscope
     when :calleree
       require "calleree"
       require "affected_tests/engine/calleree"

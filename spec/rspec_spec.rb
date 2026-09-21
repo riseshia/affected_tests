@@ -19,10 +19,8 @@ RSpec.describe "affected_tests/rspec" do
     end
   end
 
-  %i[rotoscope calleree coverage].each do |engine|
+  %i[calleree coverage].each do |engine|
     context "with #{engine} engine" do
-      before { skip "#{engine} is not installed" unless engine == :coverage || Gem.loaded_specs.key?(engine.to_s) }
-
       it "maps a source file to the spec file which used it" do
         result = run_fixture_specs(engine:, spec_paths: ["spec/direct_spec.rb"])
 
