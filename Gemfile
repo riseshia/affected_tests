@@ -6,3 +6,8 @@ source "https://rubygems.org"
 gemspec
 
 gem "rake", "~> 13.0"
+gem "rspec"
+
+# Optional engines, which users choose by themselves
+gem "calleree"
+gem "rotoscope"
