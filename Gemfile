@@ -10,4 +10,5 @@ gem "rspec"
 
 # Optional engines, which users choose by themselves
 gem "calleree"
-gem "rotoscope"
+# rotoscope 0.3.0 cannot be built on Ruby 4.1+, which removed Data_Make_Struct
+gem "rotoscope" if RUBY_VERSION < "4.1"
